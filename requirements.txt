@@ -1,4 +1,8 @@
-# Dependencies for raw-data.py
+# Dependencies for raw-data.py & notebooks
 pandas>=2.0.0
 numpy>=1.24.0
+matplotlib
+scikit-learn
 prophet
+ipywidgets   # tqdm progress bar trong Jupyter
+plotly       # Prophet interactive plots

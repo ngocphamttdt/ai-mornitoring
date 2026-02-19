@@ -2,44 +2,27 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-# 1. Cấu hình thông số cơ bản
-num_days = 7
-frequency = '1min'  # 1 minute (tương ứng mỗi phút chạy cron job) 
-start_date = datetime(2026, 2, 7)
-instances = ['server-01', 'server-02']
-metrics = ['CPU', 'RAM']
-
-# 2. Tạo khung thời gian
-date_range = pd.date_range(start=start_date, periods=num_days*24*60, freq=frequency)
-
+# Tạo 21 ngày (3 tuần) để Prophet học chu kỳ tuần cực chuẩn
+end_date = datetime(2026, 2, 18, 23, 0)
+num_days = 21 
+timestamps = pd.date_range(end=end_date, periods=num_days * 96, freq='15min')
 data_list = []
 
-for instance in instances:
-    for metric in metrics:
-        # Tạo dữ liệu ngẫu nhiên có tính xu hướng (để mô hình Prophet/Linear Regression có thể học)
-        base_usage = np.random.uniform(20, 50, size=len(date_range))
+for ts in timestamps:
+    # Nền tảng 40%, có chút nhiễu nhẹ cho thật
+    val = 40 + np.random.normal(0, 1)
+    
+    # Đỉnh Sale: Thứ 2 (0) và Thứ 5 (3) từ 10h-16h
+    if ts.weekday() in [0, 3] and (10 <= ts.hour <= 16):
+        # Tạo đỉnh vòm mượt mà thay vì nhảy vọt
+        peak_shape = np.sin(np.pi * (ts.hour - 10) / 6)
+        val += 50 * peak_shape 
         
-        # Giả lập một đợt High Usage (Risk) - Tăng dần lên trên 90% [cite: 25]
-        base_usage[500:1000] += np.linspace(0, 45, 500) 
-        
-        # Giả lập một đợt Low Usage (Opportunity) - Giảm xuống dưới 20% [cite: 21]
-        base_usage[2000:2500] -= np.linspace(0, 15, 500)
+    data_list.append({
+        'timestamp': ts, 'instance_id': 'Web-Server-01',
+        'metric_label': 'CPU_usage', 'value': round(val, 2),
+        'memory_gb': 16, 'storage_gb': 100
+    })
 
-        for i, ts in enumerate(date_range):
-            usage = max(0, min(100, base_usage[i])) # Đảm bảo trong khoảng 0-100%
-            
-            data_list.append({
-                'timestamp': ts,
-                'instance_id': instance,
-                'metric_label': metric, # [cite: 8]
-                'value': round(usage, 2), # Historical-data [cite: 9]
-                'min_range': 0, # 
-                'max_range': 100 # 
-            })
-
-# 3. Tạo DataFrame và lưu file
-df = pd.DataFrame(data_list)
-df.to_csv('historical_server_logs.csv', index=False)
-
-print("Đã tạo thành công file 'historical_server_logs.csv' với", len(df), "dòng dữ liệu.")
-print(df.head())
+pd.DataFrame(data_list).to_csv('historical_long.csv', index=False)
+print("✅ Đã tạo xong dữ liệu 3 tuần với chu kỳ Sale Thứ 2 & Thứ 5 cực rõ.")
