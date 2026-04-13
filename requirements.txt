@@ -6,3 +6,4 @@ scikit-learn
 prophet
 ipywidgets   # tqdm progress bar trong Jupyter
 plotly       # Prophet interactive plots
+nbformat>=4.2.0  # Mime type rendering for plotly
