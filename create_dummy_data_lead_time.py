@@ -51,8 +51,14 @@ for instance in instances:
             'storage_gb': metric_configs[instance]['disk'],
         })
 
+import os
+
 df = pd.DataFrame(data_list)
-out_path = 'dataset/historical_server_logs_10days_cri_leadtime.csv'
+out_path = 'predict/data/historical_server_logs_10days_cri_leadtime.csv'
+
+# Ensure the parent directory exists
+os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
 df.to_csv(out_path, index=False)
 
 print(f"✅ Đã tạo {out_path}")
